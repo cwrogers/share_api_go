@@ -5,6 +5,7 @@ import (
 	"os"
 	"share/share-api/common/config"
 	"share/share-api/models/app"
+	"strings"
 	"time"
 
 	"crypto/md5"
@@ -24,14 +25,15 @@ var jwtSecret = os.Getenv(config.ApplicationConfig.JwtSecret)
 
 func JWT() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		token := ctx.Request.Header.Get("Authorization")
+		appG := app.Gin{Ctx: ctx}
+		token := strings.Trim(ctx.Request.Header.Get("Authorization"), " ")
 		if token == "" {
-			app.SendResponse(http.StatusUnauthorized, nil, ctx)
+			appG.Response(http.StatusUnauthorized, nil)
 			return
 		}
 		_, err := ParseToken(token)
 		if err != nil {
-			app.SendResponse(http.StatusUnauthorized, nil, ctx)
+			appG.Response(http.StatusUnauthorized, nil)
 			return
 		}
 		ctx.Next()

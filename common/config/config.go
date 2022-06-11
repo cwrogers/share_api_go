@@ -1,6 +1,10 @@
 package config
 
-import "github.com/go-ini/ini"
+import (
+	"os"
+
+	"github.com/go-ini/ini"
+)
 
 type Application struct {
 	Name           string `json:"name"`
@@ -36,6 +40,13 @@ func init() {
 	mapTo("Application", ApplicationConfig)
 	mapTo("Database", DatabaseConfig)
 
+	DatabaseConfig.Host = getStringFromEnv(DatabaseConfig.Host)
+	DatabaseConfig.User = getStringFromEnv(DatabaseConfig.User)
+	DatabaseConfig.Pass = getStringFromEnv(DatabaseConfig.Pass)
+}
+
+func getStringFromEnv(key string) string {
+	return os.Getenv(key)
 }
 
 func mapTo(section string, v interface{}) {

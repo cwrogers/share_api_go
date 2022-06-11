@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"share/share-api/common/strings"
 	"share/share-api/models/app"
 	"share/share-api/mw"
 	"share/share-api/services"
@@ -37,20 +38,20 @@ func Auth(ctx *gin.Context) {
 
 	if err != nil {
 		code := http.StatusInternalServerError
-		appG.Response(code, nil)
+		appG.Response(code, err.Error())
 		return
 	}
 
 	if !userDoesExist {
 		code := http.StatusUnauthorized
-		appG.Response(code, nil)
+		appG.Response(code, strings.UserNotFound)
 		return
 	}
 
 	token, err := mw.GenerateToken(username, password)
 	if err != nil {
 		code := http.StatusInternalServerError
-		appG.Response(code, nil)
+		appG.Response(code, err.Error())
 		return
 	}
 

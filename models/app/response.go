@@ -23,11 +23,3 @@ func (g *Gin) Response(httpCode int, data interface{}) {
 		Data:    data,
 	})
 }
-
-func SendResponse(httpCode int, data interface{}, ctx *gin.Context) {
-	ctx.JSON(httpCode, Response{
-		Code:    httpCode,
-		Message: http.StatusText(httpCode),
-		Data:    data,
-	})
-}

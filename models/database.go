@@ -8,6 +8,7 @@ import (
 
 	"share/share-api/common/config"
 )
+import _ "github.com/go-sql-driver/mysql"
 
 type Model struct {
 	ID        uint `gorm:"primary_key" json:"id"`
@@ -19,19 +20,20 @@ type Model struct {
 var db *gorm.DB
 
 func CreateDBConnection() {
-	db, err := gorm.Open(config.DatabaseConfig.Type, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
+	var err error
+	db, err = gorm.Open(config.DatabaseConfig.Type, fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		config.DatabaseConfig.User,
 		config.DatabaseConfig.Pass,
 		config.DatabaseConfig.Host,
 		config.DatabaseConfig.Name))
 
 	if err != nil {
-		panic(err)
+		println(err.Error())
 	}
 
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+	/*gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return config.DatabaseConfig.TablePrefix + defaultTableName
-	}
+	}*/
 
 	db.SingularTable(true)
 	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampForCreateCallback)
