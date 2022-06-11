@@ -1,11 +1,10 @@
 package routers
 
 import (
+	"github.com/gin-gonic/gin"
 	"share/share-api/common/config"
 	"share/share-api/mw"
 	"share/share-api/routers/api"
-
-	"github.com/gin-gonic/gin"
 )
 
 func CreateRouter() *gin.Engine {
@@ -14,6 +13,7 @@ func CreateRouter() *gin.Engine {
 	router.Use(gin.Recovery())
 
 	router.POST("/auth", api.Auth)
+	router.POST("/auth/createUser", api.CreateUser)
 
 	apiv1 := router.Group(config.ApplicationConfig.EndpointPrefix)
 	apiv1.Use(mw.JWT())
