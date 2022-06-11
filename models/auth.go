@@ -21,6 +21,10 @@ func ValidateAuthentication(username string, password string) (bool, error) {
 	}
 
 	if auth.ID > 0 {
+		//bcrypt check password
+		if bcrypt.CompareHashAndPassword([]byte(auth.Password), []byte(password)) != nil {
+			return false, nil
+		}
 		return true, nil
 	}
 
