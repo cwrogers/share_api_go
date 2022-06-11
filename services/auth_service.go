@@ -10,3 +10,7 @@ type Auth struct {
 func (a *Auth) Validate() (bool, error) {
 	return models.ValidateAuthentication(a.Username, a.Password)
 }
+
+func (a *Auth) CreateUser() (bool, error) {
+	return models.CreateUser(a.Username, a.Password)
+}

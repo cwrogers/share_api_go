@@ -58,3 +58,37 @@ func Auth(ctx *gin.Context) {
 	appG.Response(http.StatusOK, token)
 
 }
+
+func CreateUser(ctx *gin.Context) {
+	appG := app.Gin{Ctx: ctx}
+	valid := validation.Validation{}
+
+	username := ctx.PostForm("username")
+	password := ctx.PostForm("password")
+
+	a := auth{username, password}
+	ok, _ := valid.Valid(&a)
+
+	if !ok {
+		code := http.StatusBadRequest
+		appG.Response(code, nil)
+		return
+	}
+
+	userAuth := services.Auth{Username: username, Password: password}
+
+	userCreated, err := userAuth.CreateUser()
+
+	if err != nil {
+		code := http.StatusInternalServerError
+		appG.Response(code, err.Error())
+		return
+	}
+
+	if !userCreated {
+		code := http.StatusInternalServerError
+		appG.Response(code, strings.GenericErrorMessage)
+		return
+	}
+
+}
