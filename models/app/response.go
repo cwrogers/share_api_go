@@ -17,9 +17,11 @@ type Response struct {
 }
 
 func (g *Gin) Response(httpCode int, data interface{}) {
+
 	g.Ctx.JSON(httpCode, Response{
 		Code:    httpCode,
 		Message: http.StatusText(httpCode),
 		Data:    data,
 	})
+
 }

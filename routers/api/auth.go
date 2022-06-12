@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"regexp"
 	"share/share-api/common/strings"
 	"share/share-api/models/app"
 	"share/share-api/mw"
@@ -48,14 +49,14 @@ func Auth(ctx *gin.Context) {
 		return
 	}
 
-	token, err := mw.GenerateToken(username, password)
+	token, refreshToken, err := mw.GenerateToken(username, password)
 	if err != nil {
 		code := http.StatusInternalServerError
 		appG.Response(code, err.Error())
 		return
 	}
 
-	appG.Response(http.StatusOK, token)
+	appG.Response(http.StatusOK, mw.AuthenticationResponse{Token: token, RefreshToken: refreshToken})
 
 }
 
@@ -69,7 +70,7 @@ func CreateUser(ctx *gin.Context) {
 	a := auth{username, password}
 	ok, _ := valid.Valid(&a)
 
-	if !ok {
+	if !ok || !isValidEmail(username) {
 		code := http.StatusBadRequest
 		appG.Response(code, nil)
 		return
@@ -91,4 +92,12 @@ func CreateUser(ctx *gin.Context) {
 		return
 	}
 
+}
+
+// validate email
+func isValidEmail(email string) bool {
+	// regex email
+	regex := `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
+	r := regexp.MustCompile(regex)
+	return r.MatchString(email)
 }

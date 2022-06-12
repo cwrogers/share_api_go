@@ -17,5 +17,7 @@ func CreateRouter() *gin.Engine {
 
 	apiv1 := router.Group(config.ApplicationConfig.EndpointPrefix)
 	apiv1.Use(mw.JWT())
+	apiv1.POST("/share", api.Share)
+
 	return router
 }

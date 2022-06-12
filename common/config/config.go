@@ -40,9 +40,14 @@ func init() {
 	mapTo("Application", ApplicationConfig)
 	mapTo("Database", DatabaseConfig)
 
+	registerEnvVars()
+}
+
+func registerEnvVars() {
 	DatabaseConfig.Host = getStringFromEnv(DatabaseConfig.Host)
 	DatabaseConfig.User = getStringFromEnv(DatabaseConfig.User)
 	DatabaseConfig.Pass = getStringFromEnv(DatabaseConfig.Pass)
+	ApplicationConfig.JwtSecret = getStringFromEnv(ApplicationConfig.JwtSecret)
 }
 
 func getStringFromEnv(key string) string {

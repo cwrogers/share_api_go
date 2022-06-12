@@ -2,7 +2,6 @@ package mw
 
 import (
 	"net/http"
-	"os"
 	"share/share-api/common/config"
 	"share/share-api/models/app"
 	"strings"
@@ -17,11 +16,15 @@ import (
 
 type Claims struct {
 	Username string `json:"username"`
-	Password string `json:"password"`
 	jwt.StandardClaims
 }
 
-var jwtSecret = os.Getenv(config.ApplicationConfig.JwtSecret)
+type AuthenticationResponse struct {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+var jwtSecret = config.ApplicationConfig.JwtSecret
 
 func JWT() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -29,13 +32,16 @@ func JWT() gin.HandlerFunc {
 		token := strings.Trim(ctx.Request.Header.Get("Authorization"), " ")
 		if token == "" {
 			appG.Response(http.StatusUnauthorized, nil)
+			ctx.Abort()
 			return
 		}
-		_, err := ParseToken(token)
+		claims, err := ParseToken(token)
 		if err != nil {
-			appG.Response(http.StatusUnauthorized, nil)
+			appG.Response(http.StatusUnauthorized, err.Error())
+			ctx.Abort()
 			return
 		}
+		ctx.Set("username", claims.Username)
 		ctx.Next()
 	}
 }
@@ -48,29 +54,43 @@ func EncodeMD5(value string) string {
 }
 
 // GenerateToken generate tokens used for auth
-func GenerateToken(username, password string) (string, error) {
+func GenerateToken(username, password string) (string, string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(3 * time.Hour)
 
 	claims := Claims{
-		EncodeMD5(username),
-		EncodeMD5(password),
+		username,
 		jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
-			Issuer:    "gin-blog",
+			Issuer:    config.ApplicationConfig.Name,
 		},
 	}
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenClaims.SignedString(jwtSecret)
+	token, err := tokenClaims.SignedString([]byte(jwtSecret))
 
-	return token, err
+	if err != nil {
+		return "", "", err
+	}
+	rtClaims := Claims{
+		username,
+		jwt.StandardClaims{
+			ExpiresAt: nowTime.Add(time.Hour * 24 * 7).Unix(),
+			Issuer:    config.ApplicationConfig.Name,
+		},
+	}
+
+	//gen refresh token
+	refreshTokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
+	refreshToken, err := refreshTokenClaims.SignedString([]byte(jwtSecret))
+
+	return token, refreshToken, err
 }
 
 // ParseToken parsing token
 func ParseToken(token string) (*Claims, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return []byte(jwtSecret), nil
 	})
 
 	if tokenClaims != nil {
