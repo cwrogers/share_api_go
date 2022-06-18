@@ -16,7 +16,7 @@ type ShareRequest struct {
 
 func Share(ctx *gin.Context) {
 	appG := app.Gin{Ctx: ctx}
-
+	ctx.Get("username")
 	appG.Response(http.StatusOK, ShareRequest{Data: "data", Time: time.Now().Unix()})
 
 }

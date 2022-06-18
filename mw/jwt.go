@@ -20,8 +20,10 @@ type Claims struct {
 }
 
 type AuthenticationResponse struct {
-	Token        string `json:"token"`
-	RefreshToken string `json:"refresh_token"`
+	Token       string `json:"token"`
+	TokenExp    int64  `json:"token_exp"`
+	RefToken    string `json:"refresh_token"`
+	RefTokenExp int64  `json:"refresh_token_exp"`
 }
 
 var jwtSecret = config.ApplicationConfig.JwtSecret
@@ -54,7 +56,7 @@ func EncodeMD5(value string) string {
 }
 
 // GenerateToken generate tokens used for auth
-func GenerateToken(username, password string) (string, string, error) {
+func GenerateToken(username, password string) (AuthenticationResponse, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(3 * time.Hour)
 
@@ -70,12 +72,14 @@ func GenerateToken(username, password string) (string, string, error) {
 	token, err := tokenClaims.SignedString([]byte(jwtSecret))
 
 	if err != nil {
-		return "", "", err
+		return AuthenticationResponse{}, err
 	}
+
+	rtExp := nowTime.Add(24 * time.Hour).Unix()
 	rtClaims := Claims{
 		username,
 		jwt.StandardClaims{
-			ExpiresAt: nowTime.Add(time.Hour * 24 * 7).Unix(),
+			ExpiresAt: rtExp,
 			Issuer:    config.ApplicationConfig.Name,
 		},
 	}
@@ -84,7 +88,14 @@ func GenerateToken(username, password string) (string, string, error) {
 	refreshTokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	refreshToken, err := refreshTokenClaims.SignedString([]byte(jwtSecret))
 
-	return token, refreshToken, err
+	resp := AuthenticationResponse{
+		Token:       token,
+		TokenExp:    expireTime.Unix(),
+		RefToken:    refreshToken,
+		RefTokenExp: rtExp,
+	}
+
+	return resp, err
 }
 
 // ParseToken parsing token

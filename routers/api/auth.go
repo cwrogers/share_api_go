@@ -49,14 +49,14 @@ func Auth(ctx *gin.Context) {
 		return
 	}
 
-	token, refreshToken, err := mw.GenerateToken(username, password)
+	response, err := mw.GenerateToken(username, password)
 	if err != nil {
 		code := http.StatusInternalServerError
 		appG.Response(code, err.Error())
 		return
 	}
 
-	appG.Response(http.StatusOK, mw.AuthenticationResponse{Token: token, RefreshToken: refreshToken})
+	appG.Response(http.StatusOK, response)
 
 }
 
